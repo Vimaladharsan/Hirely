@@ -3,80 +3,82 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   Trophy,
-  Users,
   BarChart3,
 } from "lucide-react";
 
 import StatsCard from "../components/StatsCard";
 import ScoreBadge from "../components/ScoreBadge";
+import { useScreening } from "../context/useScreening";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { job, candidates } = useScreening();
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("highest");
 
-  const candidates = [
-    {
-      id: 1,
-      name: "Priya Sharma",
-      skills: "React, Node.js, MongoDB",
-      experience: "3 Years",
-      score: 94,
-    },
-    {
-      id: 2,
-      name: "Rahul Verma",
-      skills: "Python, Django, PostgreSQL",
-      experience: "4 Years",
-      score: 90,
-    },
-    {
-      id: 3,
-      name: "Ananya Iyer",
-      skills: "Java, Spring Boot",
-      experience: "5 Years",
-      score: 86,
-    },
-    {
-      id: 4,
-      name: "Arjun Nair",
-      skills: "HTML, CSS, JavaScript",
-      experience: "2 Years",
-      score: 74,
-    },
-  ];
-
   const filteredCandidates = useMemo(() => {
     const filtered = candidates.filter((candidate) =>
-      candidate.name.toLowerCase().includes(search.toLowerCase())
+      candidate.candidate_name.toLowerCase().includes(search.toLowerCase())
     );
 
     switch (sortBy) {
       case "highest":
-        return [...filtered].sort((a, b) => b.score - a.score);
+        return [...filtered].sort(
+          (a, b) => b.compatibility_score - a.compatibility_score
+        );
 
       case "lowest":
-        return [...filtered].sort((a, b) => a.score - b.score);
+        return [...filtered].sort(
+          (a, b) => a.compatibility_score - b.compatibility_score
+        );
 
       case "name":
         return [...filtered].sort((a, b) =>
-          a.name.localeCompare(b.name)
+          a.candidate_name.localeCompare(b.candidate_name)
         );
 
       default:
         return filtered;
     }
-  }, [search, sortBy]);
+  }, [search, sortBy, candidates]);
+
+  if (candidates.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center px-6 text-center">
+        <BarChart3 className="text-blue-500 mb-6" size={48} />
+
+        <h1 className="text-3xl font-bold mb-3">
+          No screening results yet
+        </h1>
+
+        <p className="text-slate-400 max-w-md mb-8">
+          Create a job description and upload resumes to see AI-powered
+          candidate rankings here.
+        </p>
+
+        <button
+          onClick={() => navigate("/job")}
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Start Screening →
+        </button>
+      </div>
+    );
+  }
 
   const topCandidate = [...candidates].sort(
-    (a, b) => b.score - a.score
+    (a, b) => b.compatibility_score - a.compatibility_score
   )[0];
 
   const averageScore = Math.round(
-    candidates.reduce((sum, c) => sum + c.score, 0) /
+    candidates.reduce((sum, c) => sum + c.compatibility_score, 0) /
       candidates.length
   );
+
+  const shortlisted = candidates.filter(
+    (c) => c.compatibility_score >= 80
+  ).length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6 md:p-8">
@@ -91,7 +93,7 @@ function Dashboard() {
           </h1>
 
           <p className="text-slate-400 mt-2">
-            AI-powered candidate screening results
+            AI-powered screening results{job ? ` for ${job.title}` : ""}
           </p>
         </div>
 
@@ -110,7 +112,7 @@ function Dashboard() {
 
         <StatsCard
           title="Top Score"
-          value={`${topCandidate.score}%`}
+          value={`${Math.round(topCandidate.compatibility_score)}%`}
         />
 
         <StatsCard
@@ -120,7 +122,7 @@ function Dashboard() {
 
         <StatsCard
           title="Shortlisted"
-          value={3}
+          value={shortlisted}
         />
 
       </div>
@@ -143,17 +145,17 @@ function Dashboard() {
             </h2>
 
             <p className="text-xl mt-2">
-              {topCandidate.name}
+              {topCandidate.candidate_name}
             </p>
 
             <p className="text-slate-200 mt-1">
-              {topCandidate.skills}
+              {topCandidate.matched_skills.slice(0, 5).join(", ") || "No matched skills"}
             </p>
 
           </div>
 
           <div className="md:ml-auto">
-            <ScoreBadge score={topCandidate.score} />
+            <ScoreBadge score={topCandidate.compatibility_score} />
           </div>
 
         </div>
@@ -276,20 +278,22 @@ function Dashboard() {
                       </td>
 
                       <td className="p-5 font-medium">
-                        {candidate.name}
+                        {candidate.candidate_name}
                       </td>
 
                       <td className="p-5">
-                        {candidate.experience}
+                        {candidate.experience_years
+                          ? `${candidate.experience_years} Years`
+                          : "N/A"}
                       </td>
 
                       <td className="p-5">
-                        {candidate.skills}
+                        {candidate.matched_skills.slice(0, 3).join(", ") || "—"}
                       </td>
 
                       <td className="p-5">
                         <ScoreBadge
-                          score={candidate.score}
+                          score={candidate.compatibility_score}
                         />
                       </td>
 

@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useScreening } from "../context/useScreening";
+
 function JobDescription() {
   const navigate = useNavigate();
+  const { job, setJob, setCandidates } = useScreening();
 
-  const [jobTitle, setJobTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [description, setDescription] = useState("");
+  const [jobTitle, setJobTitle] = useState(job?.title ?? "");
+  const [company, setCompany] = useState(job?.company ?? "");
+  const [description, setDescription] = useState(job?.description ?? "");
 
   const handleContinue = () => {
     if (!jobTitle || !company || !description) {
@@ -14,12 +17,14 @@ function JobDescription() {
       return;
     }
 
-    // Later we'll send this to the backend
-    console.log({
-      jobTitle,
+    setJob({
+      title: jobTitle,
       company,
       description,
     });
+
+    // Starting a new job clears any results from a previous screening.
+    setCandidates([]);
 
     navigate("/upload");
   };

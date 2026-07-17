@@ -1,6 +1,17 @@
 import re
 import spacy
 
+_nlp = None
+
+
+def _get_nlp():
+    global _nlp
+
+    if _nlp is None:
+        _nlp = spacy.load("en_core_web_sm")
+
+    return _nlp
+
 
 class PreprocessingService:
     """
@@ -8,7 +19,7 @@ class PreprocessingService:
     """
 
     def __init__(self):
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = _get_nlp()
 
     def clean_text(self, text: str) -> str:
         """
@@ -72,3 +83,15 @@ class PreprocessingService:
                 tokens.append(lemma)
 
         return " ".join(tokens)
+
+
+_service = None
+
+
+def clean_text(text: str) -> str:
+    global _service
+
+    if _service is None:
+        _service = PreprocessingService()
+
+    return _service.clean_text(text)

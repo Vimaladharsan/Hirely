@@ -1,16 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, FileText, X } from "lucide-react";
+
+import { useScreening } from "../context/useScreening";
+import { analyzeResumes } from "../api/api";
 
 function UploadResume() {
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { job, setJob, setCandidates } = useScreening();
+
+  useEffect(() => {
+    if (!job) {
+      navigate("/job");
+    }
+  }, [job, navigate]);
 
   const allowedTypes = [
     "application/pdf",
-    "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
 
@@ -19,7 +30,7 @@ function UploadResume() {
 
     selectedFiles.forEach((file) => {
       if (!allowedTypes.includes(file.type)) {
-        alert(`${file.name} is not a supported file.`);
+        alert(`${file.name} is not a supported file. Only PDF and DOCX are supported.`);
         return;
       }
 
@@ -64,17 +75,40 @@ function UploadResume() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (files.length === 0) {
       alert("Please upload at least one resume.");
       return;
     }
 
-    console.log(files);
+    if (!job) {
+      navigate("/job");
+      return;
+    }
 
-    // Backend integration will go here later
+    setError("");
+    setIsUploading(true);
 
-    navigate("/dashboard");
+    try {
+      const response = await analyzeResumes({
+        jobTitle: job.title,
+        company: job.company,
+        jobDescription: job.description,
+        files,
+      });
+
+      setJob({ ...job, jobId: response.data.job_id });
+      setCandidates(response.data.candidates);
+
+      navigate("/dashboard");
+    } catch (err) {
+      const detail =
+        err.response?.data?.detail || "Something went wrong while analyzing resumes.";
+
+      setError(detail);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -86,7 +120,8 @@ function UploadResume() {
         </h1>
 
         <p className="text-slate-400 mb-8">
-          Upload candidate resumes for AI-powered screening.
+          Upload candidate resumes for AI-powered screening against{" "}
+          <span className="text-white font-medium">{job?.title}</span>.
         </p>
 
         <label
@@ -110,13 +145,13 @@ function UploadResume() {
           </p>
 
           <p className="text-sm text-slate-500 mt-2">
-            Supports PDF, DOC and DOCX (Max 5 MB)
+            Supports PDF and DOCX (Max 5 MB)
           </p>
 
           <input
             type="file"
             multiple
-            accept=".pdf,.doc,.docx"
+            accept=".pdf,.docx"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -164,12 +199,18 @@ function UploadResume() {
           </div>
         )}
 
+        {error && (
+          <div className="mt-6 bg-red-900/30 border border-red-600 rounded-lg p-4 text-red-300">
+            {error}
+          </div>
+        )}
+
         <button
           onClick={handleUpload}
-          disabled={files.length === 0}
+          disabled={files.length === 0 || isUploading}
           className="mt-8 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed py-4 rounded-xl font-semibold transition"
         >
-          Analyze Resumes
+          {isUploading ? "Analyzing Resumes…" : "Analyze Resumes"}
         </button>
 
       </div>

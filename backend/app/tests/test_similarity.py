@@ -1,18 +1,22 @@
 from app.services.similarity_service import SimilarityService
 
-service = SimilarityService()
 
-resume = """
-python fastapi sql docker git
-"""
+def test_calculate_similarity_identical_text():
+    score = SimilarityService.calculate_similarity(
+        "python fastapi sql", "python fastapi sql"
+    )
 
-job = """
-python fastapi sql docker aws git
-"""
+    assert score == 100.0
 
-score = service.calculate_similarity(
-    resume,
-    job
-)
 
-print(score)
+def test_calculate_similarity_relevant_text():
+    score = SimilarityService.calculate_similarity(
+        "python fastapi sql docker git",
+        "python fastapi sql docker aws git",
+    )
+
+    assert score > 50
+
+
+def test_calculate_similarity_empty_text():
+    assert SimilarityService.calculate_similarity("", "python") == 0.0

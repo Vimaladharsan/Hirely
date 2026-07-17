@@ -6,7 +6,7 @@ function ScoreBadge({ score }) {
 
   return (
     <span className={`${color} px-3 py-1 rounded-full text-white font-semibold`}>
-      {score}%
+      {Math.round(score)}%
     </span>
   );
 }

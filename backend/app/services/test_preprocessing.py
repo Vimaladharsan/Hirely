@@ -1,4 +1,4 @@
-from preprocessing import PreprocessingService
+from app.services.preprocessing import PreprocessingService
 
 service = PreprocessingService()
 

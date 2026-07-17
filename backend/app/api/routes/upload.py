@@ -1,20 +1,19 @@
-from fastapi import APIRouter, UploadFile, File
-import os
+from fastapi import APIRouter, UploadFile, File, HTTPException
+
+from app.utils.file_handler import FileHandler
 
 router = APIRouter()
 
-UPLOAD_DIR = "../uploads"
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-    
-    with open(file_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-    
+    try:
+        FileHandler.validate_file(file)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    FileHandler.save_file(file)
+
     return {
         "filename": file.filename,
         "status": "uploaded"

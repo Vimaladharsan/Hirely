@@ -1,37 +1,36 @@
-import fitz
 from pathlib import Path
+
+import fitz
+from docx import Document
 
 
 class ParserService:
     """
     Service for parsing resume files.
-    Currently supports PDF resumes.
+    Supports PDF and DOCX resumes.
     """
 
     @staticmethod
     def extract_text(file_path: str) -> str:
-        """
-        Extract text from a PDF file.
-
-        Args:
-            file_path (str): Path to the uploaded PDF.
-
-        Returns:
-            str: Extracted text.
-        """
-
         path = Path(file_path)
 
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        if path.suffix.lower() != ".pdf":
-            raise ValueError("Only PDF files are supported.")
+        suffix = path.suffix.lower()
 
-        text = ""
+        if suffix == ".pdf":
+            return ParserService._extract_pdf(file_path)
+        elif suffix == ".docx":
+            return ParserService._extract_docx(file_path)
 
+        raise ValueError("Only PDF and DOCX files are supported.")
+
+    @staticmethod
+    def _extract_pdf(file_path: str) -> str:
         try:
             document = fitz.open(file_path)
+            text = ""
 
             for page in document:
                 text += page.get_text()
@@ -42,3 +41,18 @@ class ParserService:
 
         except Exception as e:
             raise Exception(f"Error parsing PDF: {str(e)}")
+
+    @staticmethod
+    def _extract_docx(file_path: str) -> str:
+        try:
+            document = Document(file_path)
+            paragraphs = [p.text for p in document.paragraphs]
+
+            return "\n".join(paragraphs).strip()
+
+        except Exception as e:
+            raise Exception(f"Error parsing DOCX: {str(e)}")
+
+
+def extract_text(file_path: str) -> str:
+    return ParserService.extract_text(file_path)

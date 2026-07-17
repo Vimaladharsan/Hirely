@@ -7,7 +7,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 PARSED_FOLDER = os.path.join(BASE_DIR, "parsed")
 
 # Allowed File Types
-ALLOWED_EXTENSIONS = {".pdf"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
 # Maximum File Size (5 MB)
 MAX_FILE_SIZE = 5 * 1024 * 1024
