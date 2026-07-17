@@ -1,1 +1,283 @@
 @import "tailwindcss";
+
+/* ============================================================
+   Hirely — Talent Intelligence Console
+   Design tokens
+   ============================================================ */
+
+@theme {
+  /* Ink structure (cool, violet-biased near-black) */
+  --color-ink-950: #06070d;
+  --color-ink-900: #0a0b12;
+  --color-ink-850: #0e1019;
+  --color-ink-800: #12141f;
+  --color-ink-750: #181b29;
+  --color-ink-700: #1f2333;
+  --color-ink-600: #2a2f44;
+
+  /* Indigo — structural / interactive */
+  --color-iris-300: #b6b8fb;
+  --color-iris-400: #9698f9;
+  --color-iris-500: #7c7cf9;
+  --color-iris-600: #5b52ec;
+  --color-iris-700: #4a3fd4;
+
+  /* Gold — merit signal */
+  --color-gold-300: #ffd987;
+  --color-gold-400: #f5b642;
+  --color-gold-500: #e79c25;
+
+  /* Semantic score tiers */
+  --color-strong: #34d399;
+  --color-good: #fbbf24;
+  --color-weak: #fb7185;
+
+  /* Text */
+  --color-cloud: #edeef5;
+  --color-mist: #9aa0b4;
+  --color-haze: #626880;
+
+  /* Lines */
+  --color-hair: rgba(237, 238, 245, 0.08);
+  --color-hair-strong: rgba(237, 238, 245, 0.14);
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ink-900);
+    color: var(--color-cloud);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-iris-500) 40%, transparent);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ink-900);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-radius: 999px;
+    border: 3px solid var(--color-ink-900);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #363b52;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-iris-400);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   Reusable component primitives
+   ============================================================ */
+
+@layer components {
+  /* Elevated surface */
+  .surface {
+    background: linear-gradient(
+      180deg,
+      var(--color-ink-800),
+      var(--color-ink-850)
+    );
+    border: 1px solid var(--color-hair);
+    border-radius: var(--radius-2xl);
+  }
+
+  .surface-flat {
+    background: var(--color-ink-800);
+    border: 1px solid var(--color-hair);
+  }
+
+  /* Hairline label */
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-haze);
+    font-weight: 600;
+  }
+
+  /* Instrument numeral */
+  .readout {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* Primary action */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    background: linear-gradient(
+      180deg,
+      var(--color-iris-500),
+      var(--color-iris-600)
+    );
+    color: #fff;
+    font-weight: 600;
+    border-radius: 0.85rem;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 10px 30px -10px color-mix(in srgb, var(--color-iris-600) 70%, transparent);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset,
+      0 16px 40px -12px color-mix(in srgb, var(--color-iris-600) 80%, transparent);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+  .btn-primary:disabled {
+    filter: grayscale(0.5) brightness(0.7);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Ghost action */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--color-ink-750);
+    border: 1px solid var(--color-hair-strong);
+    color: var(--color-cloud);
+    font-weight: 500;
+    border-radius: 0.85rem;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .btn-ghost:hover {
+    background: var(--color-ink-700);
+    border-color: color-mix(in srgb, var(--color-iris-500) 40%, transparent);
+  }
+
+  /* Form field */
+  .field {
+    width: 100%;
+    background: var(--color-ink-850);
+    border: 1px solid var(--color-hair-strong);
+    color: var(--color-cloud);
+    border-radius: 0.85rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease,
+      background 0.18s ease;
+  }
+  .field::placeholder {
+    color: var(--color-haze);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-iris-500);
+    background: var(--color-ink-800);
+    box-shadow: 0 0 0 4px
+      color-mix(in srgb, var(--color-iris-500) 18%, transparent);
+  }
+
+  /* Gradient text */
+  .grad-text {
+    background: linear-gradient(
+      100deg,
+      var(--color-cloud) 0%,
+      var(--color-iris-300) 60%,
+      var(--color-gold-400) 130%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Soft aurora glow (decorative, non-interactive) */
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(90px);
+    opacity: 0.5;
+  }
+  .aurora::before {
+    width: 40rem;
+    height: 40rem;
+    top: -18rem;
+    left: -8rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-iris-600) 60%, transparent),
+      transparent 70%
+    );
+  }
+  .aurora::after {
+    width: 34rem;
+    height: 34rem;
+    top: -12rem;
+    right: -10rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-gold-500) 34%, transparent),
+      transparent 70%
+    );
+  }
+}
+
+/* ============================================================
+   Motion
+   ============================================================ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

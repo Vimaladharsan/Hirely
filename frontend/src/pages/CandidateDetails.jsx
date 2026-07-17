@@ -5,9 +5,21 @@ import {
   Award,
   CircleCheck,
   CircleX,
+  MessageSquareQuote,
+  FileText,
 } from "lucide-react";
 
 import { useScreening } from "../context/useScreening";
+import ScoreRing from "../components/ScoreRing";
+import { TIER_META, tierOf } from "../utils/tier";
+
+const COMPONENTS = [
+  { label: "Semantic Match", field: "semantic_score", max: 50 },
+  { label: "Skills", field: "skill_score", max: 20 },
+  { label: "Experience", field: "experience_score", max: 15 },
+  { label: "Education", field: "education_score", max: 10 },
+  { label: "Certifications", field: "certification_score", max: 5 },
+];
 
 function CandidateDetails() {
   const navigate = useNavigate();
@@ -18,18 +30,16 @@ function CandidateDetails() {
 
   if (!candidate) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center px-6 text-center">
-        <h1 className="text-3xl font-bold mb-3">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--color-ink-900)] px-6 text-center text-[var(--color-cloud)]">
+        <h1 className="text-3xl font-bold tracking-tight">
           Candidate not found
         </h1>
-
-        <p className="text-slate-400 mb-8">
+        <p className="mt-3 text-[var(--color-mist)]">
           This candidate isn't in your current screening results.
         </p>
-
         <button
           onClick={() => navigate("/dashboard")}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+          className="btn-primary mt-8 px-6 py-3"
         >
           Back to Dashboard
         </button>
@@ -37,219 +47,211 @@ function CandidateDetails() {
     );
   }
 
-  const score = Math.round(candidate.compatibility_score);
+  const meta = TIER_META[tierOf(candidate.compatibility_score)];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 md:p-8">
+    <div className="min-h-screen bg-[var(--color-ink-900)] px-6 py-8 text-[var(--color-cloud)] md:px-10">
+      <div className="mx-auto max-w-5xl">
+        <button
+          onClick={() => navigate(-1)}
+          className="btn-ghost mb-8 px-4 py-2.5 text-sm"
+        >
+          <ArrowLeft size={16} />
+          Back to Dashboard
+        </button>
 
-      {/* Back Button */}
+        {/* Header instrument */}
+        <div className="surface relative overflow-hidden p-7 sm:p-9">
+          <div
+            className="absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-[0.10] blur-3xl"
+            style={{ background: meta.color }}
+          />
 
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition"
-      >
-        <ArrowLeft size={18} />
-        Back to Dashboard
-      </button>
+          <div className="relative flex flex-col items-center gap-7 sm:flex-row sm:gap-9">
+            <ScoreRing score={candidate.compatibility_score} size={148} stroke={11} />
 
-      {/* Candidate Header */}
-
-      <div className="bg-slate-900 rounded-2xl p-8 mt-6 shadow-lg">
-
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
-
-          <div>
-
-            <h1 className="text-4xl font-bold">
-              {candidate.candidate_name}
-            </h1>
-
-            <p className="text-slate-400 mt-2">
-              {candidate.filename}
-              {candidate.experience_years
-                ? ` • ${candidate.experience_years} Years`
-                : ""}
-            </p>
-
-          </div>
-
-          <div className="bg-green-600 text-white px-8 py-5 rounded-xl text-3xl font-bold shadow-lg">
-            {score}%
-          </div>
-
-        </div>
-
-        {/* Progress Bar */}
-
-        <div className="mt-8">
-
-          <div className="flex justify-between mb-2">
-
-            <span className="font-semibold">
-              Overall Match Score
-            </span>
-
-            <span>{score}%</span>
-
-          </div>
-
-          <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden">
-
-            <div
-              className="h-full bg-green-500 rounded-full transition-all duration-700"
-              style={{ width: `${score}%` }}
-            />
-
-          </div>
-
-        </div>
-
-        {/* Score Breakdown */}
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
-
-          {[
-            ["Semantic Match", candidate.semantic_score, 50],
-            ["Skills", candidate.skill_score, 20],
-            ["Experience", candidate.experience_score, 15],
-            ["Education", candidate.education_score, 10],
-            ["Certifications", candidate.certification_score, 5],
-          ].map(([label, value, max]) => (
-            <div key={label} className="bg-slate-800 rounded-xl p-4 text-center">
-              <p className="text-slate-400 text-sm">{label}</p>
-              <p className="text-xl font-bold mt-1">
-                {value.toFixed(1)}
-                <span className="text-slate-500 text-sm">/{max}</span>
-              </p>
-            </div>
-          ))}
-
-        </div>
-
-      </div>
-
-      {/* Skills + Recommendation */}
-
-      <div className="grid lg:grid-cols-2 gap-6 mt-8">
-
-        <div className="bg-slate-900 rounded-2xl p-6">
-
-          <h2 className="flex items-center gap-2 text-2xl font-bold mb-5">
-            <Award />
-            Matched Skills
-          </h2>
-
-          <div className="flex flex-wrap gap-3">
-
-            {candidate.matched_skills.length === 0 ? (
-              <p className="text-slate-400">No matched skills found.</p>
-            ) : (
-              candidate.matched_skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-full"
-                >
-                  {skill}
+            <div className="flex-1 text-center sm:text-left">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                {candidate.candidate_name}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[var(--color-mist)] sm:justify-start">
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText size={14} />
+                  {candidate.filename}
                 </span>
-              ))
-            )}
-
-          </div>
-
-        </div>
-
-        <div className="bg-slate-900 rounded-2xl p-6">
-
-          <h2 className="flex items-center gap-2 text-2xl font-bold mb-5">
-            <Brain />
-            AI Recommendation
-          </h2>
-
-          <p className="text-slate-300 leading-8">
-            {candidate.recommendation}. This score is based on semantic
-            resume-to-job match, skill overlap, experience relevance,
-            education, and certifications/projects.
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* Strengths + Missing Skills */}
-
-      <div className="grid lg:grid-cols-2 gap-6 mt-6">
-
-        <div className="bg-slate-900 rounded-2xl p-6">
-
-          <h2 className="text-2xl font-bold mb-5">
-            Strengths
-          </h2>
-
-          <div className="space-y-3">
-
-            {candidate.strengths.map((item) => (
-              <div
-                key={item}
-                className="bg-green-900/30 border border-green-600 rounded-lg p-4 flex items-center gap-3"
-              >
-                <CircleCheck className="text-green-400" />
-                {item}
+                {candidate.experience_years ? (
+                  <span className="readout">
+                    {candidate.experience_years} yrs experience
+                  </span>
+                ) : null}
               </div>
-            ))}
 
+              <span
+                className="mt-4 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold"
+                style={{
+                  color: meta.color,
+                  background: `color-mix(in srgb, ${meta.color} 14%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${meta.color} 34%, transparent)`,
+                }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: meta.color }}
+                />
+                {meta.label}
+              </span>
+            </div>
           </div>
 
+          {/* Score breakdown meters */}
+          <div className="relative mt-8 border-t border-[var(--color-hair)] pt-7">
+            <p className="eyebrow mb-4">Score Composition</p>
+            <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              {COMPONENTS.map(({ label, field, max }) => {
+                const value = candidate[field] ?? 0;
+                const pct = max ? (value / max) * 100 : 0;
+                return (
+                  <div key={label}>
+                    <div className="mb-1.5 flex items-baseline justify-between">
+                      <span className="text-sm text-[var(--color-mist)]">
+                        {label}
+                      </span>
+                      <span className="readout text-sm">
+                        <span className="font-semibold text-[var(--color-cloud)]">
+                          {value.toFixed(1)}
+                        </span>
+                        <span className="text-[var(--color-haze)]">/{max}</span>
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--color-ink-700)]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[var(--color-iris-500)] to-[var(--color-iris-400)] transition-all duration-700"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="bg-slate-900 rounded-2xl p-6">
+        {/* Skills + Recommendation */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section className="surface p-6">
+            <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
+              <Award size={18} className="text-[var(--color-iris-400)]" />
+              Matched Skills
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {candidate.matched_skills.length === 0 ? (
+                <p className="text-sm text-[var(--color-haze)]">
+                  No matched skills found.
+                </p>
+              ) : (
+                candidate.matched_skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-lg border border-[var(--color-iris-500)]/30 bg-[var(--color-iris-500)]/12 px-3 py-1.5 text-sm text-[var(--color-iris-300)]"
+                  >
+                    {skill}
+                  </span>
+                ))
+              )}
+            </div>
+          </section>
 
-          <h2 className="text-2xl font-bold mb-5">
-            Missing Skills
-          </h2>
+          <section className="surface p-6">
+            <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold">
+              <Brain size={18} className="text-[var(--color-gold-400)]" />
+              AI Recommendation
+            </h2>
+            <p className="leading-relaxed text-[var(--color-mist)]">
+              <span className="font-semibold" style={{ color: meta.color }}>
+                {candidate.recommendation}.
+              </span>{" "}
+              This score weighs semantic resume-to-job match, skill overlap,
+              experience relevance, education, and certifications.
+            </p>
+          </section>
+        </div>
 
-          <div className="space-y-3">
-
-            {candidate.missing_skills.length === 0 ? (
-              <p className="text-slate-400">
-                No missing skills detected — great coverage of the job requirements.
-              </p>
-            ) : (
-              candidate.missing_skills.map((item) => (
+        {/* Strengths + Missing */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section className="surface p-6">
+            <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
+              <CircleCheck size={18} className="text-[var(--color-strong)]" />
+              Strengths
+            </h2>
+            <div className="space-y-2.5">
+              {candidate.strengths.map((item) => (
                 <div
                   key={item}
-                  className="bg-red-900/30 border border-red-600 rounded-lg p-4 flex items-center gap-3"
+                  className="flex items-start gap-3 rounded-xl border border-[var(--color-strong)]/25 bg-[var(--color-strong)]/[0.08] p-3.5"
                 >
-                  <CircleX className="text-red-400" />
-                  {item}
+                  <CircleCheck
+                    size={17}
+                    className="mt-0.5 shrink-0 text-[var(--color-strong)]"
+                  />
+                  <span className="text-sm text-[var(--color-cloud)]">
+                    {item}
+                  </span>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
+          </section>
 
-          </div>
-
+          <section className="surface p-6">
+            <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
+              <CircleX size={18} className="text-[var(--color-weak)]" />
+              Skill Gaps
+            </h2>
+            <div className="space-y-2.5">
+              {candidate.missing_skills.length === 0 ? (
+                <p className="text-sm text-[var(--color-mist)]">
+                  No missing skills detected — great coverage of the job
+                  requirements.
+                </p>
+              ) : (
+                candidate.missing_skills.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 rounded-xl border border-[var(--color-weak)]/25 bg-[var(--color-weak)]/[0.08] p-3.5"
+                  >
+                    <CircleX
+                      size={17}
+                      className="mt-0.5 shrink-0 text-[var(--color-weak)]"
+                    />
+                    <span className="text-sm text-[var(--color-cloud)]">
+                      {item}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </div>
 
+        {/* Interview questions */}
+        <section className="surface mt-6 p-6 sm:p-7">
+          <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
+            <MessageSquareQuote size={18} className="text-[var(--color-iris-400)]" />
+            Suggested Interview Questions
+          </h2>
+          <ol className="space-y-3">
+            {candidate.interview_questions.map((question, i) => (
+              <li key={question} className="flex items-start gap-3.5">
+                <span className="readout mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-[var(--color-iris-500)]/15 text-sm font-semibold text-[var(--color-iris-300)]">
+                  {i + 1}
+                </span>
+                <span className="leading-relaxed text-[var(--color-mist)]">
+                  {question}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
       </div>
-
-      {/* Interview Questions */}
-
-      <div className="bg-slate-900 rounded-2xl p-6 mt-6">
-
-        <h2 className="flex items-center gap-2 text-2xl font-bold mb-5">
-          <CircleCheck />
-          AI Interview Questions
-        </h2>
-
-        <ol className="list-decimal ml-6 space-y-4 text-slate-300">
-
-          {candidate.interview_questions.map((question) => (
-            <li key={question}>{question}</li>
-          ))}
-
-        </ol>
-
-      </div>
-
     </div>
   );
 }

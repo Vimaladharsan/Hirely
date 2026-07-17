@@ -1,12 +1,23 @@
-function ScoreBadge({ score }) {
-  let color = "bg-red-500";
+import { tierColor } from "../utils/tier";
 
-  if (score >= 85) color = "bg-green-500";
-  else if (score >= 70) color = "bg-yellow-500";
+function ScoreBadge({ score }) {
+  const value = Math.round(score);
+  const color = tierColor(value);
 
   return (
-    <span className={`${color} px-3 py-1 rounded-full text-white font-semibold`}>
-      {Math.round(score)}%
+    <span
+      className="readout inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
+      style={{
+        color,
+        background: `color-mix(in srgb, ${color} 14%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${color} 34%, transparent)`,
+      }}
+    >
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ background: color }}
+      />
+      {value}%
     </span>
   );
 }

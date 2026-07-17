@@ -1,7 +1,7 @@
 function Loader() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500"></div>
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-ink-900)]">
+      <div className="h-14 w-14 animate-spin rounded-full border-2 border-[var(--color-ink-700)] border-t-[var(--color-iris-500)]" />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Upload, FileText, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Upload, FileText, X, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 
 import { useScreening } from "../context/useScreening";
 import { analyzeResumes } from "../api/api";
+import Stepper from "../components/Stepper";
 
 function UploadResume() {
   const [files, setFiles] = useState([]);
@@ -112,107 +113,131 @@ function UploadResume() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex justify-center items-center px-6 py-10">
-      <div className="w-full max-w-4xl bg-slate-900 rounded-2xl shadow-xl p-8">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--color-ink-900)] px-6 py-10 text-[var(--color-cloud)]">
+      <div className="aurora opacity-60" />
 
-        <h1 className="text-4xl font-bold mb-2">
-          Upload Resumes
-        </h1>
-
-        <p className="text-slate-400 mb-8">
-          Upload candidate resumes for AI-powered screening against{" "}
-          <span className="text-white font-medium">{job?.title}</span>.
-        </p>
-
-        <label
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
-            isDragging
-              ? "border-green-500 bg-slate-800"
-              : "border-blue-500 hover:bg-slate-800"
-          }`}
+      <div className="relative mx-auto max-w-3xl">
+        <Link
+          to="/job"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-[var(--color-haze)] transition-colors hover:text-[var(--color-cloud)]"
         >
-          <Upload className="w-16 h-16 text-blue-500 mb-4" />
+          <ArrowLeft size={16} />
+          Back to role
+        </Link>
 
-          <h2 className="text-2xl font-semibold">
-            Drag & Drop Resume Here
-          </h2>
+        <Stepper current={1} />
 
-          <p className="text-slate-400 mt-3">
-            or click to browse files
-          </p>
+        <div className="surface animate-rise p-8 sm:p-10">
+          <div className="mb-8">
+            <p className="eyebrow">Step 2</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">
+              Upload candidate resumes
+            </h1>
+            <p className="mt-2 text-[var(--color-mist)]">
+              Screening against{" "}
+              <span className="font-semibold text-[var(--color-cloud)]">
+                {job?.title}
+              </span>
+              {job?.company ? ` at ${job.company}` : ""}.
+            </p>
+          </div>
 
-          <p className="text-sm text-slate-500 mt-2">
-            Supports PDF and DOCX (Max 5 MB)
-          </p>
+          <label
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ${
+              isDragging
+                ? "border-[var(--color-iris-400)] bg-[var(--color-iris-500)]/10"
+                : "border-[var(--color-hair-strong)] hover:border-[var(--color-iris-500)] hover:bg-[var(--color-ink-800)]"
+            }`}
+          >
+            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--color-iris-500)]/15">
+              <Upload className="h-7 w-7 text-[var(--color-iris-400)]" />
+            </span>
 
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.docx"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
+            <h2 className="mt-5 text-xl font-semibold">
+              Drag &amp; drop resumes here
+            </h2>
+            <p className="mt-1.5 text-[var(--color-mist)]">
+              or click to browse your files
+            </p>
+            <p className="mt-3 text-xs text-[var(--color-haze)]">
+              PDF and DOCX · up to 5 MB each · multiple at once
+            </p>
 
-        {files.length > 0 && (
-          <div className="mt-8">
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.docx"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
 
-            <h3 className="text-xl font-semibold mb-4">
-              Selected Files
-            </h3>
+          {files.length > 0 && (
+            <div className="mt-8">
+              <p className="eyebrow mb-3">
+                {files.length} file{files.length > 1 ? "s" : ""} ready
+              </p>
 
-            <div className="space-y-3">
-
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center bg-slate-800 rounded-lg p-4"
-                >
-                  <div className="flex items-center gap-3">
-
-                    <FileText className="text-blue-500" />
-
-                    <div>
-                      <p>{file.name}</p>
-
-                      <p className="text-sm text-slate-400">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
+              <div className="space-y-2.5">
+                {files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="surface-flat flex items-center justify-between rounded-xl p-3.5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--color-iris-500)]/12">
+                        <FileText size={16} className="text-[var(--color-iris-400)]" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {file.name}
+                        </p>
+                        <p className="readout text-xs text-[var(--color-haze)]">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
                     </div>
 
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="grid h-8 w-8 place-items-center rounded-lg text-[var(--color-haze)] transition-colors hover:bg-[var(--color-weak)]/15 hover:text-[var(--color-weak)]"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="hover:text-red-500 transition"
-                  >
-                    <X />
-                  </button>
-
-                </div>
-              ))}
-
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {error && (
-          <div className="mt-6 bg-red-900/30 border border-red-600 rounded-lg p-4 text-red-300">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="mt-6 rounded-xl border border-[var(--color-weak)]/40 bg-[var(--color-weak)]/10 px-4 py-3 text-sm text-[var(--color-weak)]">
+              {error}
+            </div>
+          )}
 
-        <button
-          onClick={handleUpload}
-          disabled={files.length === 0 || isUploading}
-          className="mt-8 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed py-4 rounded-xl font-semibold transition"
-        >
-          {isUploading ? "Analyzing Resumes…" : "Analyze Resumes"}
-        </button>
-
+          <button
+            onClick={handleUpload}
+            disabled={files.length === 0 || isUploading}
+            className="btn-primary mt-8 w-full py-4 text-base"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Analyzing resumes…
+              </>
+            ) : (
+              <>
+                Analyze Resumes
+                <ArrowRight size={18} />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
