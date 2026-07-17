@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 from app.services.parser import ParserService
-from app.services.preprocessing import clean_text
 from app.services.similarity_service import SimilarityService
 from app.services.skill_extraction_service import SkillExtractionService
 from app.utils.constants import STRONG_MATCH, GOOD_MATCH, AVERAGE_MATCH
@@ -150,10 +149,12 @@ class ScreeningService:
 
         raw_text = ParserService.extract_text(file_path)
 
-        cleaned_resume = clean_text(raw_text)
-        cleaned_jd = clean_text(job_description)
-
-        semantic_raw = SimilarityService.calculate_similarity(cleaned_resume, cleaned_jd)
+        # Transformer embeddings understand natural language, so we feed
+        # the raw resume / JD text (grammar and stop words intact) rather
+        # than the lemmatized form the old TF-IDF path required.
+        semantic_raw = SimilarityService.calculate_similarity(
+            raw_text, job_description
+        )
 
         resume_skills = SkillExtractionService.extract_skills(raw_text)
         jd_skills = SkillExtractionService.extract_skills(job_description)
