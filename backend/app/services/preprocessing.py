@@ -1,14 +1,21 @@
 import re
+import threading
+
 import spacy
 
 _nlp = None
+_nlp_lock = threading.Lock()
 
 
 def _get_nlp():
+    """Thread-safe lazy load — see similarity_service._get_model for why
+    double-checked locking matters once resumes are processed concurrently."""
     global _nlp
 
     if _nlp is None:
-        _nlp = spacy.load("en_core_web_sm")
+        with _nlp_lock:
+            if _nlp is None:
+                _nlp = spacy.load("en_core_web_sm")
 
     return _nlp
 

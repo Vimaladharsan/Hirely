@@ -3,28 +3,41 @@
 /* ============================================================
    Hirely — Talent Intelligence Console
    Design tokens
+
+   Every component in this app reads its colors via Tailwind's
+   arbitrary-value syntax, e.g. bg-[var(--color-iris-500)]. That
+   means the entire visual system can be retuned from this single
+   token block without touching a single component file.
    ============================================================ */
 
 @theme {
-  /* Ink structure (cool, violet-biased near-black) */
-  --color-ink-950: #06070d;
-  --color-ink-900: #0a0b12;
-  --color-ink-850: #0e1019;
-  --color-ink-800: #12141f;
-  --color-ink-750: #181b29;
-  --color-ink-700: #1f2333;
-  --color-ink-600: #2a2f44;
+  /* Ink structure — cool, violet-biased near-black. Adjacent steps
+     are spaced further apart than a typical grey scale so stacked
+     cards (surface on surface on page) read as distinctly elevated
+     instead of blurring together — the "flat cards on a flat page"
+     problem that makes dark UIs look cheap. */
+  --color-ink-950: #05060b;
+  --color-ink-900: #090a10;
+  --color-ink-850: #0d0f18;
+  --color-ink-800: #131521;
+  --color-ink-750: #191c2b;
+  --color-ink-700: #212537;
+  --color-ink-600: #2c3146;
 
-  /* Indigo — structural / interactive */
-  --color-iris-300: #b6b8fb;
-  --color-iris-400: #9698f9;
-  --color-iris-500: #7c7cf9;
-  --color-iris-600: #5b52ec;
-  --color-iris-700: #4a3fd4;
+  /* Indigo — structural / interactive. Slightly more saturated than
+     the previous pass so primary actions read clearly as
+     "the" accent against the cooler ink neutrals, matching the
+     restrained-but-confident accent use of Linear/Vercel. */
+  --color-iris-300: #bcbdfc;
+  --color-iris-400: #9b9cfb;
+  --color-iris-500: #7f7ffa;
+  --color-iris-600: #5d53ef;
+  --color-iris-700: #4a3fd6;
 
-  /* Gold — merit signal */
-  --color-gold-300: #ffd987;
-  --color-gold-400: #f5b642;
+  /* Gold — merit signal, reserved for scores/standout candidates so
+     it stays meaningful instead of decorative. */
+  --color-gold-300: #ffdd94;
+  --color-gold-400: #f6ba46;
   --color-gold-500: #e79c25;
 
   /* Semantic score tiers */
@@ -33,19 +46,36 @@
   --color-weak: #fb7185;
 
   /* Text */
-  --color-cloud: #edeef5;
-  --color-mist: #9aa0b4;
-  --color-haze: #626880;
+  --color-cloud: #f1f2f8;
+  --color-mist: #a3a9bd;
+  --color-haze: #686f87;
 
   /* Lines */
-  --color-hair: rgba(237, 238, 245, 0.08);
-  --color-hair-strong: rgba(237, 238, 245, 0.14);
+  --color-hair: rgba(241, 242, 248, 0.07);
+  --color-hair-strong: rgba(241, 242, 248, 0.14);
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
 
+  --radius-md: 0.65rem;
+  --radius-lg: 0.85rem;
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
+
+  /* Layered elevation — a soft ambient shadow plus a tighter contact
+     shadow reads as physically resting on the page, rather than a
+     single flat drop-shadow which looks pasted-on. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 1px 1px rgba(0, 0, 0, 0.16);
+  --shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.32),
+    0 2px 6px -2px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.5),
+    0 8px 20px -8px rgba(0, 0, 0, 0.36);
+
+  /* One easing curve, used everywhere, so every hover/press in the
+     app feels like the same physical material. */
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 160ms;
+  --duration-base: 220ms;
 }
 
 /* ============================================================
@@ -63,6 +93,17 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Improves default readability/hierarchy for any heading that
+     doesn't already carry an explicit Tailwind tracking/leading
+     utility — most of the app's H1/H2s do, but this keeps any
+     future or unstyled heading from defaulting to browser-ugly. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+    text-wrap: balance;
   }
 
   ::selection {
@@ -86,9 +127,55 @@
     background: #363b52;
   }
 
+  /* A two-layer focus ring (ring + soft glow) rather than a plain
+     outline — the same idea Stripe/Linear use so keyboard focus is
+     unmistakable without looking like a browser default. Applies to
+     every focusable element site-wide, including any plain <button>
+     or <a> that doesn't use the .btn-* helper classes below. */
   :focus-visible {
     outline: 2px solid var(--color-iris-400);
     outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Baseline smoothness for every interactive element, so anything
+     that isn't already using .btn-primary/.btn-ghost/.field still
+     gets a tasteful default transition instead of a hard snap. Explicit
+     utility classes elsewhere in a component always take precedence
+     over this — it only fills the gaps. */
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    transition: background-color var(--duration-base) var(--ease-premium),
+      border-color var(--duration-base) var(--ease-premium),
+      color var(--duration-base) var(--ease-premium),
+      box-shadow var(--duration-base) var(--ease-premium),
+      transform var(--duration-fast) var(--ease-premium),
+      opacity var(--duration-base) var(--ease-premium);
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* Custom dropdown chevron in the app's ink/mist palette, replacing
+     the OS-default arrow so <select> elements (e.g. the Dashboard
+     sort control) match the rest of the design system instead of
+     looking like an unstyled form control. */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a3a9bd' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem !important;
+    cursor: pointer;
   }
 }
 
@@ -97,7 +184,9 @@
    ============================================================ */
 
 @layer components {
-  /* Elevated surface */
+  /* Elevated surface — now carries real depth (shadow-md) instead of
+     sitting perfectly flush with the page background, which is what
+     was making cards read as "flat" rather than "raised". */
   .surface {
     background: linear-gradient(
       180deg,
@@ -106,11 +195,13 @@
     );
     border: 1px solid var(--color-hair);
     border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
   }
 
   .surface-flat {
     background: var(--color-ink-800);
     border: 1px solid var(--color-hair);
+    box-shadow: var(--shadow-sm);
   }
 
   /* Hairline label */
@@ -141,23 +232,31 @@
     );
     color: #fff;
     font-weight: 600;
-    border-radius: 0.85rem;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset,
-      0 10px 30px -10px color-mix(in srgb, var(--color-iris-600) 70%, transparent);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14) inset,
+      0 10px 24px -8px color-mix(in srgb, var(--color-iris-600) 65%, transparent);
+    transition: transform var(--duration-fast) var(--ease-premium),
+      box-shadow var(--duration-base) var(--ease-premium),
+      filter var(--duration-base) var(--ease-premium);
   }
   .btn-primary:hover {
-    filter: brightness(1.06);
+    filter: brightness(1.08);
     transform: translateY(-1px);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset,
-      0 16px 40px -12px color-mix(in srgb, var(--color-iris-600) 80%, transparent);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
+      0 16px 34px -10px color-mix(in srgb, var(--color-iris-600) 75%, transparent);
   }
   .btn-primary:active {
     transform: translateY(0);
+    filter: brightness(0.98);
+  }
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--color-iris-300);
+    outline-offset: 3px;
   }
   .btn-primary:disabled {
     filter: grayscale(0.5) brightness(0.7);
     cursor: not-allowed;
+    transform: none;
     box-shadow: none;
   }
 
@@ -171,23 +270,41 @@
     border: 1px solid var(--color-hair-strong);
     color: var(--color-cloud);
     font-weight: 500;
-    border-radius: 0.85rem;
-    transition: background 0.18s ease, border-color 0.18s ease;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: background var(--duration-base) var(--ease-premium),
+      border-color var(--duration-base) var(--ease-premium),
+      transform var(--duration-fast) var(--ease-premium);
   }
   .btn-ghost:hover {
     background: var(--color-ink-700);
     border-color: color-mix(in srgb, var(--color-iris-500) 40%, transparent);
+    transform: translateY(-1px);
+  }
+  .btn-ghost:active {
+    transform: translateY(0);
+  }
+  .btn-ghost:disabled {
+    box-shadow: none;
   }
 
-  /* Form field */
+  /* Form field. Uses background-color (not the `background` shorthand)
+     so it never clobbers the select-arrow background-image set on the
+     bare `select` element in @layer base — the shorthand implicitly
+     resets background-image to `none` regardless of layer order,
+     which silently deleted the custom dropdown chevron. */
   .field {
     width: 100%;
-    background: var(--color-ink-850);
+    background-color: var(--color-ink-850);
     border: 1px solid var(--color-hair-strong);
     color: var(--color-cloud);
-    border-radius: 0.85rem;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease,
-      background 0.18s ease;
+    border-radius: var(--radius-lg);
+    transition: border-color var(--duration-base) var(--ease-premium),
+      box-shadow var(--duration-base) var(--ease-premium),
+      background-color var(--duration-base) var(--ease-premium);
+  }
+  .field:hover:not(:focus):not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-iris-400) 30%, var(--color-hair-strong));
   }
   .field::placeholder {
     color: var(--color-haze);
@@ -195,9 +312,13 @@
   .field:focus {
     outline: none;
     border-color: var(--color-iris-500);
-    background: var(--color-ink-800);
+    background-color: var(--color-ink-800);
     box-shadow: 0 0 0 4px
       color-mix(in srgb, var(--color-iris-500) 18%, transparent);
+  }
+  .field:disabled {
+    background-color: var(--color-ink-850);
+    border-color: var(--color-hair);
   }
 
   /* Gradient text */
@@ -269,9 +390,14 @@
 }
 
 .animate-rise {
-  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 0.6s var(--ease-premium) both;
 }
 
+/* Respecting reduced-motion is an accessibility requirement, not a
+   style preference — this is the one justified use of !important in
+   the file, overriding any animation/transition duration set above
+   (including inline Tailwind duration utilities in components) for
+   users who've asked the OS to minimize motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

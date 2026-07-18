@@ -37,6 +37,11 @@ class ScreeningResult(Base):
         nullable=False
     )
 
+    file_path = Column(
+        String(500),
+        nullable=True
+    )
+
     similarity_score = Column(
         Float,
         nullable=False
@@ -98,6 +103,12 @@ class ScreeningResult(Base):
     interview_questions = Column(
         Text,
         nullable=True
+    )
+
+    insight_source = Column(
+        String(20),
+        nullable=False,
+        default="rule_based"
     )
 
     created_at = Column(

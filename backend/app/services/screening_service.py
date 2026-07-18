@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from app.services.gemini_insight_service import GeminiInsightService
 from app.services.parser import ParserService
 from app.services.similarity_service import SimilarityService
 from app.services.skill_extraction_service import SkillExtractionService
@@ -196,6 +197,32 @@ class ScreeningService:
             2,
         )
 
+        recommendation = _recommendation_for(compatibility_score)
+
+        # Try Gemini for grounded, resume-specific insights; fall back to
+        # the rule-based generators if no key is configured or the call
+        # fails for any reason. The pipeline must never break because an
+        # LLM call failed.
+        insights = GeminiInsightService.generate_insights(
+            resume_text=raw_text,
+            job_description=job_description,
+            matched_skills=matched_skills,
+            missing_skills=missing_skills,
+            compatibility_score=compatibility_score,
+            recommendation=recommendation,
+        )
+
+        if insights:
+            strengths = insights["strengths"]
+            interview_questions = insights["interview_questions"]
+            insight_source = "gemini"
+        else:
+            strengths = _build_strengths(
+                matched_skills, semantic_raw, experience_years, has_certs
+            )
+            interview_questions = _build_questions(matched_skills, missing_skills)
+            insight_source = "rule_based"
+
         return {
             "candidate_name": _candidate_name_from_filename(display_name),
             "filename": display_name,
@@ -206,12 +233,11 @@ class ScreeningService:
             "experience_score": experience_score,
             "education_score": education_score,
             "certification_score": certification_score,
-            "recommendation": _recommendation_for(compatibility_score),
+            "recommendation": recommendation,
             "experience_years": experience_years,
             "matched_skills": matched_skills,
             "missing_skills": missing_skills,
-            "strengths": _build_strengths(
-                matched_skills, semantic_raw, experience_years, has_certs
-            ),
-            "interview_questions": _build_questions(matched_skills, missing_skills),
+            "strengths": strengths,
+            "interview_questions": interview_questions,
+            "insight_source": insight_source,
         }

@@ -17,6 +17,7 @@ class CandidateResult(BaseModel):
     missing_skills: list[str]
     strengths: list[str]
     interview_questions: list[str]
+    insight_source: str = "rule_based"
 
 
 class AnalyzeResponse(BaseModel):

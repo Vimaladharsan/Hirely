@@ -1,3 +1,5 @@
+import threading
+
 from sentence_transformers import SentenceTransformer, util
 
 # Compact, fast, CPU-friendly sentence embedding model (384-dim).
@@ -5,14 +7,26 @@ from sentence_transformers import SentenceTransformer, util
 _MODEL_NAME = "all-MiniLM-L6-v2"
 
 _model = None
+_model_lock = threading.Lock()
 
 
 def _get_model():
-    """Lazily load and cache the embedding model (like the spaCy pipeline)."""
+    """
+    Lazily load and cache the embedding model. Resumes are screened
+    concurrently in worker threads (see the /screening/analyze route),
+    so this uses double-checked locking — without it, multiple threads
+    each see `_model is None` at the same time and every one of them
+    loads its own full copy of the model simultaneously, which is
+    exactly backwards: it turns "process 5 resumes in parallel" into
+    "load the same multi-hundred-MB model 5 times at once", competing
+    for CPU and making the parallel version slower than sequential.
+    """
     global _model
 
     if _model is None:
-        _model = SentenceTransformer(_MODEL_NAME)
+        with _model_lock:
+            if _model is None:
+                _model = SentenceTransformer(_MODEL_NAME)
 
     return _model
 

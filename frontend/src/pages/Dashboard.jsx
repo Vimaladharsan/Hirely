@@ -8,17 +8,20 @@ import {
   BadgeCheck,
   Sparkles,
   ArrowRight,
+  LogOut,
 } from "lucide-react";
 
 import StatsCard from "../components/StatsCard";
 import ScoreBadge from "../components/ScoreBadge";
 import ScoreRing from "../components/ScoreRing";
 import { useScreening } from "../context/useScreening";
+import { useAuth } from "../context/useAuth";
 import { TIER_META, tierOf } from "../utils/tier";
 
 function Dashboard() {
   const navigate = useNavigate();
   const { job, candidates } = useScreening();
+  const { user, logout } = useAuth();
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("highest");
@@ -108,9 +111,23 @@ function Dashboard() {
             </div>
           </div>
 
-          <Link to="/job" className="btn-ghost px-4 py-2.5 text-sm">
-            New screening
-          </Link>
+          <div className="flex items-center gap-3">
+            {user && (
+              <span className="hidden text-sm text-[var(--color-haze)] sm:inline">
+                {user.name || user.email}
+              </span>
+            )}
+            <Link to="/job" className="btn-ghost px-4 py-2.5 text-sm">
+              New screening
+            </Link>
+            <button
+              onClick={logout}
+              className="btn-ghost px-3 py-2.5 text-sm"
+              title="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Stats */}

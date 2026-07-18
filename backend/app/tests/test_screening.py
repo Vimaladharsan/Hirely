@@ -32,3 +32,6 @@ def test_screen_resume_scores_within_range(tmp_path):
         "Average Match",
         "Weak Match",
     }
+    assert result["insight_source"] in {"gemini", "rule_based"}
+    assert len(result["strengths"]) > 0
+    assert len(result["interview_questions"]) > 0

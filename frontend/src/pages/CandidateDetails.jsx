@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -7,11 +8,16 @@ import {
   CircleX,
   MessageSquareQuote,
   FileText,
+  Download,
+  ExternalLink,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 import { useScreening } from "../context/useScreening";
 import ScoreRing from "../components/ScoreRing";
 import { TIER_META, tierOf } from "../utils/tier";
+import { fetchResumeBlobUrl } from "../api/api";
 
 const COMPONENTS = [
   { label: "Semantic Match", field: "semantic_score", max: 50 },
@@ -27,6 +33,45 @@ function CandidateDetails() {
   const { candidates } = useScreening();
 
   const candidate = candidates.find((c) => String(c.id) === id);
+
+  // Keyed by candidate id so a switch to a different candidate reads as
+  // "loading" immediately, without needing a synchronous setState reset
+  // at the top of the effect.
+  const [resumeState, setResumeState] = useState({
+    id: null,
+    url: null,
+    error: false,
+  });
+
+  useEffect(() => {
+    if (!candidate) return;
+
+    let objectUrl = null;
+    let cancelled = false;
+
+    fetchResumeBlobUrl(candidate.id)
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url;
+        setResumeState({ id: candidate.id, url, error: false });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResumeState({ id: candidate.id, url: null, error: true });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [candidate]);
+
+  const resumeBlobUrl = resumeState.id === candidate?.id ? resumeState.url : null;
+  const resumeError = resumeState.id === candidate?.id && resumeState.error;
 
   if (!candidate) {
     return (
@@ -48,6 +93,21 @@ function CandidateDetails() {
   }
 
   const meta = TIER_META[tierOf(candidate.compatibility_score)];
+  const isPdf = candidate.filename.toLowerCase().endsWith(".pdf");
+  const isGemini = candidate.insight_source === "gemini";
+
+  const insightBadge = (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+        isGemini
+          ? "border border-[var(--color-gold-400)]/30 bg-[var(--color-gold-400)]/12 text-[var(--color-gold-300)]"
+          : "border border-[var(--color-hair-strong)] text-[var(--color-haze)]"
+      }`}
+    >
+      <Sparkles size={12} />
+      {isGemini ? "Gemini AI" : "Rule-based"}
+    </span>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--color-ink-900)] px-6 py-8 text-[var(--color-cloud)] md:px-10">
@@ -136,6 +196,70 @@ function CandidateDetails() {
           </div>
         </div>
 
+        {/* Resume preview */}
+        <section className="surface mt-6 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[var(--color-hair)] p-5">
+            <h2 className="flex items-center gap-2.5 text-lg font-bold">
+              <FileText size={18} className="text-[var(--color-iris-400)]" />
+              Resume Preview
+            </h2>
+
+            {resumeBlobUrl && (
+              <div className="flex items-center gap-2">
+                <a
+                  href={resumeBlobUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-ghost px-3 py-2 text-xs"
+                >
+                  <ExternalLink size={14} />
+                  Open
+                </a>
+                <a
+                  href={resumeBlobUrl}
+                  download={candidate.filename}
+                  className="btn-ghost px-3 py-2 text-xs"
+                >
+                  <Download size={14} />
+                  Download
+                </a>
+              </div>
+            )}
+          </div>
+
+          {resumeError ? (
+            <div className="flex flex-col items-center justify-center gap-2 p-14 text-center text-[var(--color-mist)]">
+              <FileText size={22} className="text-[var(--color-haze)]" />
+              <p>Couldn't load this resume file.</p>
+            </div>
+          ) : !resumeBlobUrl ? (
+            <div className="flex items-center justify-center gap-2 p-14 text-[var(--color-haze)]">
+              <Loader2 size={18} className="animate-spin" />
+              Loading resume…
+            </div>
+          ) : isPdf ? (
+            <iframe
+              src={resumeBlobUrl}
+              title={`${candidate.candidate_name} resume`}
+              className="h-[600px] w-full bg-[var(--color-ink-950)]"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 p-14 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-iris-500)]/15">
+                <FileText size={22} className="text-[var(--color-iris-400)]" />
+              </span>
+              <p className="text-[var(--color-mist)]">
+                Inline preview isn't available for DOCX files — download to
+                view the original document.
+              </p>
+              <a href={resumeBlobUrl} download={candidate.filename} className="btn-primary px-5 py-2.5 text-sm">
+                <Download size={16} />
+                Download {candidate.filename}
+              </a>
+            </div>
+          )}
+        </section>
+
         {/* Skills + Recommendation */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <section className="surface p-6">
@@ -179,10 +303,13 @@ function CandidateDetails() {
         {/* Strengths + Missing */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <section className="surface p-6">
-            <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
-              <CircleCheck size={18} className="text-[var(--color-strong)]" />
-              Strengths
-            </h2>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="flex items-center gap-2.5 text-lg font-bold">
+                <CircleCheck size={18} className="text-[var(--color-strong)]" />
+                Strengths
+              </h2>
+              {insightBadge}
+            </div>
             <div className="space-y-2.5">
               {candidate.strengths.map((item) => (
                 <div
@@ -234,10 +361,13 @@ function CandidateDetails() {
 
         {/* Interview questions */}
         <section className="surface mt-6 p-6 sm:p-7">
-          <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold">
-            <MessageSquareQuote size={18} className="text-[var(--color-iris-400)]" />
-            Suggested Interview Questions
-          </h2>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="flex items-center gap-2.5 text-lg font-bold">
+              <MessageSquareQuote size={18} className="text-[var(--color-iris-400)]" />
+              Suggested Interview Questions
+            </h2>
+            {insightBadge}
+          </div>
           <ol className="space-y-3">
             {candidate.interview_questions.map((question, i) => (
               <li key={question} className="flex items-start gap-3.5">
